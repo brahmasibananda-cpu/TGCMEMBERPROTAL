@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangalpur Mahadipa Sahi - Ganesh Puja Chanda Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase CDN Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff5722; 
+            --primary-dark: #d84315;
+            --secondary: #fff3e0; 
+            --accent: #4caf50; 
+            --text-dark: #333;
+            --text-light: #777;
+            --white: #ffffff;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--secondary); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* HEADER STYLES */
+        .app-bar { 
+            background-color: var(--primary); 
+            color: var(--white); 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 80%;
+        }
+        .app-logo {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: white;
+            border: 2px solid white;
+            flex-shrink: 0;
+        }
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+        }
+        .header-titles h3 { 
+            font-size: 13px; 
+            font-weight: 700; 
+            margin: 0;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+        .header-titles p {
+            font-size: 11px;
+            margin: 0;
+            color: #ffe0b2;
+            font-weight: 600;
+        }
+        .admin-icon-btn { 
+            background: rgba(255,255,255,0.2); 
+            color: var(--white); 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            cursor: pointer; 
+            backdrop-filter: blur(5px); 
+        }
+
+        /* INFO BANNER */
+        .info-banner {
+            background-color: var(--primary-dark);
+            color: white;
+            text-align: center;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-banner span {
+            background: rgba(0,0,0,0.2);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* MAIN CONTENT */
+        .main-wrapper { flex: 1; padding: 15px; max-width: 1000px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+        
+        @media (min-width: 769px) {
+            .main-wrapper { flex-direction: row-reverse; align-items: flex-start; padding: 30px; }
+            .form-section { flex: 1.2; position: sticky; top: 120px; }
+            .list-section { flex: 1; }
+            .header-titles h3 { font-size: 18px; }
+            .header-titles p { font-size: 14px; }
+        }
+
+        .card { background: var(--white); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .section-title { color: var(--primary); font-size: 18px; margin-bottom: 15px; font-weight: 600; border-bottom: 2px solid var(--secondary); padding-bottom: 8px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-light); margin-bottom: 5px; font-weight: 600; }
+        .form-group input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.3s; }
+        .form-group input:focus { border-color: var(--primary); }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.3s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-success { background: var(--accent); color: var(--white); margin-top: 10px; }
+        .btn-secondary { background: #e0e0e0; color: var(--text-dark); margin-top: 10px; }
+
+        #step2 { display: none; }
+        .qr-box { text-align: center; padding: 15px; background: #fafafa; border: 2px dashed #ccc; border-radius: var(--border-radius); margin-bottom: 20px; }
+        .qr-box img { max-width: 200px; width: 100%; height: auto; border-radius: 8px; margin-top: 10px; }
+
+        .member-list { display: flex; flex-direction: column; gap: 12px; }
+        .member-item { background: #fafafa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .member-info h4 { font-size: 15px; color: var(--text-dark); margin-bottom: 2px; }
+        .member-info p { font-size: 12px; color: var(--text-light); }
+        .member-fee { font-weight: 700; color: var(--primary); font-size: 15px; }
+
+        #adminArea { display: none; padding: 15px; max-width: 1200px; margin: 0 auto; }
+        .admin-section { background: var(--white); border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: var(--primary); color: var(--white); }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+
+        .admin-flex-row { display: flex; flex-direction: column; gap: 10px; }
+        @media (min-width: 600px) { .admin-flex-row { flex-direction: row; align-items: center; } }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="app-bar" id="appBar">
+        <div class="header-left">
+            <img id="logoImage" src="" alt="Logo" class="app-logo">
+            <div class="header-titles">
+                <h3>Mangalpur Mahadipa Sahi</h3>
+                <p>Ganesh Puja Chanda Portal</p>
+            </div>
+        </div>
+        <button class="admin-icon-btn" onclick="openAdminLogin()">⚙️ Admin</button>
+    </header>
+    
+    <!-- Info Banner (Last Date & Contact) -->
+    <div class="info-banner" id="infoBanner">
+        <span>⏳ Last Date: 10 SEP 2026</span>
+        <span>📞 Contact: 9090887048</span>
+    </div>
+
+    <!-- PUBLIC AREA -->
+    <div class="main-wrapper" id="publicArea">
+        <section class="form-section">
+            <div class="card" id="step1">
+                <h2 class="section-title">New Registration</h2>
+                <form id="regForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" required placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="age" required placeholder="Enter your age">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <input type="tel" id="mobile" required placeholder="10-digit number" pattern="[0-9]{10}">
+                    </div>
+                    <div class="form-group">
+                        <label>Contribution Amount (₹)</label>
+                        <input type="number" id="fee" required placeholder="Amount">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Proceed to Pay</button>
+                </form>
+            </div>
+
+            <div class="card" id="step2">
+                <h2 class="section-title">Complete Payment</h2>
+                <div class="qr-box">
+                    <p style="font-size: 14px; color: var(--text-light);">Scan QR to pay <strong>₹<span id="displayFee"></span></strong></p>
+                    <img src="" alt="Payment QR Code" id="qrImage">
+                </div>
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label>UTR / Transaction Number</label>
+                        <input type="text" id="utr" required placeholder="e.g. 304561829102">
+                    </div>
+                    <button type="submit" class="btn btn-success">Verify & Complete</button>
+                </form>
+                <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back to Edit</button>
+            </div>
+        </section>
+
+        <section class="list-section">
+            <div class="card">
+                <h2 class="section-title">Live Contributors</h2>
+                <div class="member-list" id="publicMemberList">
+                    <p style="color:var(--text-light); text-align:center;">Loading live data...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ADMIN AREA -->
+    <div id="adminArea">
+        <button class="btn btn-secondary" style="width: auto; margin-bottom: 20px;" onclick="logoutAdmin()">⬅ Back to Portal</button>
+        
+        <!-- NEW LOGO UPLOAD SECTION -->
+        <div class="admin-section">
+            <h2 class="section-title">🖼️ Update Portal Logo</h2>
+            <div class="admin-flex-row">
+                <input type="file" id="logoUploadInput" accept="image/*" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+                <button class="btn btn-primary" style="width: auto;" onclick="uploadLogo()">Upload Logo</button>
+                <img id="adminLogoPreview" src="" alt="Logo Preview" style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid #eee; object-fit: cover;">
+            </div>
+        </div>
+
+        <!-- QR CODE UPLOAD SECTION -->
+        <div class="admin-section">
+            <h2 class="section-title">📷 Update Live QR Code</h2>
+            <div class="admin-flex-row">
+                <input type="file" id="qrUploadInput" accept="image/*" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+                <button class="btn btn-primary" style="width: auto;" onclick="uploadQRCode()">Upload Live QR</button>
+                <img id="adminQrPreview" src="" alt="QR Preview" style="max-width: 80px; border-radius: 8px; border: 1px solid #eee;">
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2 class="section-title">➕ Add Member (Offline)</h2>
+            <div class="admin-flex-row">
+                <input type="text" id="adminName" placeholder="Name" class="form-group input" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <input type="number" id="adminAge" placeholder="Age" style="padding: 10px; width: 80px; border: 1px solid #ccc; border-radius: 5px;">
+                <input type="text" id="adminMobile" placeholder="Mobile" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <input type="number" id="adminFee" placeholder="Fee" style="padding: 10px; width: 80px; border: 1px solid #ccc; border-radius: 5px;">
+                <input type="text" id="adminUtr" placeholder="UTR/Cash" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <button class="btn btn-success" style="width: auto;" onclick="adminAddMember()">Add Live</button>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2 class="section-title">All Live Records</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Mobile</th>
+                            <th>Fee</th>
+                            <th>UTR No.</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PASTE YOUR FIREBASE CONFIG HERE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        // ==========================================
+
+        let tempUser = {}; 
+        
+        // --- REAL-TIME DATA SYNC ---
+        
+        // 1. Listen for Member Updates
+        db.ref('members').on('value', (snapshot) => {
+            const data = snapshot.val();
+            const listDiv = document.getElementById('publicMemberList');
+            const tbody = document.getElementById('adminTableBody');
+            
+            listDiv.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if(data) {
+                const keys = Object.keys(data).reverse();
+                keys.forEach(key => {
+                    const m = data[key];
+                    listDiv.innerHTML += `
+                        <div class="member-item">
+                            <div class="member-info">
+                                <h4>${m.name}</h4>
+                                <p>Age: ${m.age}</p>
+                            </div>
+                            <div class="member-fee">₹${m.fee}</div>
+                        </div>
+                    `;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${m.date}</td>
+                            <td>${m.name}</td>
+                            <td>${m.age}</td>
+                            <td>${m.mobile}</td>
+                            <td>₹${m.fee}</td>
+                            <td style="font-weight:600;">${m.utr}</td>
+                            <td><button class="btn-delete" onclick="deleteMember('${key}')">Del</button></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                listDiv.innerHTML = '<p style="color:var(--text-light); text-align:center; font-size:14px;">No members yet. Be the first!</p>';
+            }
+        });
+
+        // 2. Listen for QR Code Updates
+        db.ref('settings/qrCode').on('value', (snapshot) => {
+            const qrSrc = snapshot.val() || "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Ask+Admin+To+Upload+QR"; 
+            document.getElementById('qrImage').src = qrSrc;
+            document.getElementById('adminQrPreview').src = qrSrc;
+        });
+
+        // 3. Listen for Logo Updates
+        db.ref('settings/logo').on('value', (snapshot) => {
+            // Default placeholder if no logo is uploaded
+            const defaultLogo = "https://cdn-icons-png.flaticon.com/512/10166/10166649.png"; 
+            const logoSrc = snapshot.val() || defaultLogo;
+            document.getElementById('logoImage').src = logoSrc;
+            document.getElementById('adminLogoPreview').src = logoSrc;
+        });
+
+        // --- UPLOAD FUNCTIONS (Saves to Firebase) ---
+        
+        window.uploadLogo = function() {
+            const fileInput = document.getElementById('logoUploadInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64Image = event.target.result;
+                    db.ref('settings/logo').set(base64Image).then(() => {
+                        alert("Live Logo Updated Everywhere!");
+                        fileInput.value = ''; 
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Please select a Logo image first.");
+            }
+        }
+
+        window.uploadQRCode = function() {
+            const fileInput = document.getElementById('qrUploadInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64Image = event.target.result;
+                    db.ref('settings/qrCode').set(base64Image).then(() => {
+                        alert("Live QR Code Updated Everywhere!");
+                        fileInput.value = ''; 
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Please select a QR image first.");
+            }
+        }
+
+        // --- STEP 1: Registration ---
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            tempUser = {
+                name: document.getElementById('name').value,
+                age: document.getElementById('age').value,
+                mobile: document.getElementById('mobile').value,
+                fee: document.getElementById('fee').value
+            };
+            
+            document.getElementById('displayFee').innerText = tempUser.fee;
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            window.scrollTo(0, 0); 
+        });
+
+        window.backToStep1 = function() {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+        }
+
+        // --- STEP 2: Payment Submit ---
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            tempUser.utr = document.getElementById('utr').value;
+            tempUser.date = new Date().toLocaleDateString();
+
+            db.ref('members').push(tempUser).then(() => {
+                alert("Registration Complete & Synced Live!");
+
+                // WhatsApp Integration
+                const myWhatsAppNumber = "919090887048"; 
+                const msg = `*Mangalpur Mahadipa Sahi - Ganesh Puja 2026*\n\n` +
+                            `*Name:* ${tempUser.name}\n` +
+                            `*Age:* ${tempUser.age}\n` +
+                            `*Mobile:* ${tempUser.mobile}\n` +
+                            `*Chanda:* ₹${tempUser.fee}\n` +
+                            `*UTR No:* ${tempUser.utr}\n\n` +
+                            `Payment submitted successfully!`;
+
+                window.open(`https://wa.me/${myWhatsAppNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+
+                document.getElementById('regForm').reset();
+                document.getElementById('paymentForm').reset();
+                backToStep1();
+            });
+        });
+
+        // --- ADMIN CONTROLS ---
+        window.openAdminLogin = function() {
+            let pin = prompt("Enter Admin PIN:");
+            if(pin === "1234") {
+                document.getElementById('publicArea').style.display = 'none';
+                document.getElementById('appBar').style.display = 'none';
+                document.getElementById('infoBanner').style.display = 'none';
+                document.getElementById('adminArea').style.display = 'block';
+            } else if(pin !== null) {
+                alert("Incorrect PIN!");
+            }
+        }
+
+        window.logoutAdmin = function() {
+            document.getElementById('adminArea').style.display = 'none';
+            document.getElementById('publicArea').style.display = 'flex';
+            document.getElementById('appBar').style.display = 'flex';
+            document.getElementById('infoBanner').style.display = 'flex';
+        }
+
+        window.deleteMember = function(key) {
+            if(confirm("Delete this record permanently?")) {
+                db.ref('members/' + key).remove();
+            }
+        }
+
+        window.adminAddMember = function() {
+            const name = document.getElementById('adminName').value;
+            const age = document.getElementById('adminAge').value;
+            const mobile = document.getElementById('adminMobile').value;
+            const fee = document.getElementById('adminFee').value;
+            const utr = document.getElementById('adminUtr').value;
+
+            if(!name || !fee) {
+                alert("Name and Fee are required!");
+                return;
+            }
+
+            const newMember = {
+                name, age, mobile, fee, utr,
+                date: new Date().toLocaleDateString()
+            };
+
+            db.ref('members').push(newMember).then(() => {
+                document.getElementById('adminName').value = '';
+                document.getElementById('adminAge').value = '';
+                document.getElementById('adminMobile').value = '';
+                document.getElementById('adminFee').value = '';
+                document.getElementById('adminUtr').value = '';
+            });
+        }
+    </script>
+</body>
+</html>
